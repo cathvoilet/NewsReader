@@ -118,7 +118,9 @@ public class NewsData {
 	
 	public Cursor readALL(){
 		SQLiteDatabase db = mDbHelper.getReadableDatabase();
-		return db.query(NewsDataContract.TABLE_NAME, projection, null, null, null, null, sortOrder);
+		return db.query(NewsDataContract.TABLE_NAME, 
+				new String[]{"title as _id", "website", "program", "time"},
+				null, null, null, null, sortOrder);
 	}
 	
 	
@@ -126,15 +128,79 @@ public class NewsData {
 		SQLiteDatabase db = mDbHelper.getReadableDatabase();
 		String selection = NewsDataContract.COLUMN_STATUS + " LIKE ?";
 	    String[] selectionArgs = new String[]{"unread"};
-		return db.query(NewsDataContract.TABLE_NAME, projection, selection, selectionArgs, null, null, sortOrder);
+		return db.query(NewsDataContract.TABLE_NAME, 
+				new String[]{"title as _id", "website", "program", "time"},
+				selection, selectionArgs, null, null, sortOrder);
 	}
 	
 	public Cursor readSELECTED(){
 		SQLiteDatabase db = mDbHelper.getReadableDatabase();
 		String selection = NewsDataContract.COLUMN_STATUS + " LIKE ?";
 	    String[] selectionArgs = new String[]{"selected"};
-		return db.query(NewsDataContract.TABLE_NAME, projection, selection, selectionArgs, null, null, sortOrder);
+		return db.query(NewsDataContract.TABLE_NAME, 
+				new String[]{"title as _id", "website", "program", "time"},
+				selection, selectionArgs, null, null, sortOrder);
 	}
+	
+	
+	public Cursor readByPositionModeAll(int position){
+		SQLiteDatabase db = mDbHelper.getReadableDatabase();
+		Cursor c;
+		c =  db.query(NewsDataContract.TABLE_NAME, 
+				new String[]{"entryid", "title", "time", "website", "program","content"},
+				null, null, null, null, sortOrder);
+		int i = 0;
+		
+		while(i < position){
+		  c.moveToNext();
+		  i = i + 1;
+		}
+		
+		c.moveToNext();
+		
+		return c;
+	}
+		
+	public Cursor readByPositionModeUnread(int position){
+		SQLiteDatabase db = mDbHelper.getReadableDatabase();
+		Cursor c;
+		String selection = NewsDataContract.COLUMN_STATUS + " LIKE ?";
+	    String[] selectionArgs = new String[]{"unread"};
+		c =  db.query(NewsDataContract.TABLE_NAME, 
+				new String[]{"entryid", "title", "time", "website", "program","content"},
+				selection, selectionArgs, null, null, sortOrder);
+		int i = 0;
+		
+		while(i < position){
+		  c.moveToNext();
+		  i = i + 1;
+		}
+		
+		c.moveToNext();
+		
+		return c;
+	}
+	
+	public Cursor readByPositionModeSelected(int position){
+		SQLiteDatabase db = mDbHelper.getReadableDatabase();
+		Cursor c;
+		String selection = NewsDataContract.COLUMN_STATUS + " LIKE ?";
+	    String[] selectionArgs = new String[]{"selected"};
+		c =  db.query(NewsDataContract.TABLE_NAME, 
+				new String[]{"entryid", "title", "time", "website", "program","content"},
+				selection, selectionArgs, null, null, sortOrder);
+		int i = 0;
+		
+		while(i < position){
+		  c.moveToNext();
+		  i = i + 1;
+		}
+		
+		c.moveToNext();
+		
+		return c;
+	}
+		
 	
 	// To find out the entry_id of a piece of news, which is the latest one stored in database from a given web site 
 	public String getLatestNewsID(String site) {
@@ -199,16 +265,20 @@ public class NewsData {
 
 		// New value for one column
 		ContentValues values = new ContentValues();
-		if(condition == "UnreadToRead"){
+		if(condition.equals("UnreadToRead")){
 		    values.put(NewsDataContract.COLUMN_STATUS, "read");
 		}
 		
-		if(condition == "ReadToSelected"){
+		if(condition.equals("ReadToSelected")){
 			values.put(NewsDataContract.COLUMN_STATUS, "selected");
 	    }
 		
-		if(condition == "SelectedToRead"){
+		if(condition.equals("SelectedToRead")){
 			values.put(NewsDataContract.COLUMN_STATUS, "read");
+	    }
+		
+		if(condition.equals("ReadToUnread")){
+			values.put(NewsDataContract.COLUMN_STATUS, "unread");
 	    }
 
 		// Which row to update, based on the item_ID
