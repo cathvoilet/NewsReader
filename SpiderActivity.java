@@ -38,13 +38,9 @@ public class SpiderActivity {
                 col_learning.add(tempurl);
             }
         }
-        //学生园地：student
         count+=updateProgram(col_student,"学生园地");
-        //教学经纬：teaching
         count+=updateProgram(col_teaching,"教学经纬");
-        //学院动态：activity
         count+=updateProgram(col_activity,"学院动态");
-        //学术咨询：learning
         count+=updateProgram(col_learning,"学术咨询");
         return count;
     }
@@ -57,8 +53,12 @@ public class SpiderActivity {
             for (int i=Col.size()-1;i>=0;i--){
                 String tempurl=Col.get(i).toString();
                 Html temp=new Html(tempurl);
-                db.insertFirst(tempurl,website,temp.getCol());
-                db.insertSecond(tempurl,temp.getTitle(),temp.getTime(),temp.getContent());
+                db.insert(tempurl,
+                        website,
+                        temp.getCol(),
+                        temp.getTitle(),
+                        temp.getTime(),
+                        temp.getContent());
                 count++;
             }
         }
@@ -76,11 +76,15 @@ public class SpiderActivity {
             for (;i>=0;i--){
                 String tempurl=Col.get(i).toString();
                 Html temp=new Html(tempurl);
-                db.insertFirst(tempurl,website,temp.getCol());
-                db.insertSecond(tempurl,temp.getTitle(),temp.getTime(),temp.getContent());
+                db.insert(tempurl,
+                        website,
+                        temp.getCol(),
+                        temp.getTitle(),
+                        temp.getTime(),
+                        temp.getContent());
                 count++;
             }
-        }  
+        }
         return count;
     }
 
