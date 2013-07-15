@@ -15,7 +15,7 @@ public class NewsData {
     public static final String DATABASE_NAME = "NewsData.db";
     private static final String TAG = NewsData.class.getSimpleName();
     private static final int MAX_UNSELECTED_ROWS = 10;
-    private static final int MAX_INSERT_ROWS = 20;
+    //private static final int MAX_INSERT_ROWS = 20;
     
 
     
@@ -80,19 +80,16 @@ public class NewsData {
 	public void close() {
 	    this.mDbHelper.close();
 	  }
-
-	public void insert(Spider news) {
+	
+	public void insertFirst(String URL, String website, String program){
 		SQLiteDatabase db = mDbHelper.getWritableDatabase();
 
 		// Create a new map of values
 		ContentValues values = new ContentValues();
 		values.clear();
-		values.put(NewsDataContract.COLUMN_ENTRY_ID, news.entryid);
-		values.put(NewsDataContract.COLUMN_TITLE, news.title);
-		values.put(NewsDataContract.COLUMN_TIME, news.time);
-		values.put(NewsDataContract.COLUMN_WEBSITE, news.website);
-		values.put(NewsDataContract.COLUMN_PROGRAM, news.program);
-		values.put(NewsDataContract.COLUMN_CONTENT, news.content);
+		values.put(NewsDataContract.COLUMN_ENTRY_ID, URL);
+		values.put(NewsDataContract.COLUMN_WEBSITE, website);
+		values.put(NewsDataContract.COLUMN_PROGRAM, program);
 		values.put(NewsDataContract.COLUMN_STATUS, "unread");
 
 		// Insert the new row
@@ -103,23 +100,57 @@ public class NewsData {
 		
 		Log.d(TAG, "insert on " + values);
 		db.close();
+		
+	}
+	
+	public void insertSecond(String URL, String title, String time, String content){
+		SQLiteDatabase db = mDbHelper.getReadableDatabase();
+
+		// New value for one column
+		ContentValues values = new ContentValues();
+		
+		values.put(NewsDataContract.COLUMN_TITLE, title);
+		values.put(NewsDataContract.COLUMN_TIME, time);
+		values.put(NewsDataContract.COLUMN_CONTENT, content);
+
+		// Which row to update, based on the item_ID
+		String selection = NewsDataContract.COLUMN_ENTRY_ID + " LIKE ?";
+		String[] selectionArgs = { URL };
+
+		db.update(
+			NewsDataContract.TABLE_NAME,
+		    values,
+		    selection,
+		    selectionArgs);
+	
 	}
 	
 	// Define a projection that specifies which columns from the database
 	// you will actually use after this query and how data order by 
-	String[] projection = {
-						NewsDataContract.COLUMN_TITLE,
-						NewsDataContract.COLUMN_TIME,
+	String[] projectionBrief = {
+						NewsDataContract.COLUMN_TITLE + " as _id",
 						NewsDataContract.COLUMN_WEBSITE,
 						NewsDataContract.COLUMN_PROGRAM,
-						NewsDataContract.COLUMN_CONTENT
+						NewsDataContract.COLUMN_TIME
 					    };
+	
+	String[] projectionContent = {
+			NewsDataContract.COLUMN_ENTRY_ID,
+			NewsDataContract.COLUMN_TITLE,
+			NewsDataContract.COLUMN_TIME,
+			NewsDataContract.COLUMN_WEBSITE,
+			NewsDataContract.COLUMN_PROGRAM,
+			NewsDataContract.COLUMN_CONTENT,
+			NewsDataContract.COLUMN_STATUS
+		    };
+	
+	
 	String sortOrder = NewsDataContract._ID + " DESC";
 	
 	public Cursor readALL(){
 		SQLiteDatabase db = mDbHelper.getReadableDatabase();
 		return db.query(NewsDataContract.TABLE_NAME, 
-				new String[]{"title as _id", "website", "program", "time"},
+				projectionBrief,
 				null, null, null, null, sortOrder);
 	}
 	
@@ -129,7 +160,7 @@ public class NewsData {
 		String selection = NewsDataContract.COLUMN_STATUS + " LIKE ?";
 	    String[] selectionArgs = new String[]{"unread"};
 		return db.query(NewsDataContract.TABLE_NAME, 
-				new String[]{"title as _id", "website", "program", "time"},
+				projectionBrief,
 				selection, selectionArgs, null, null, sortOrder);
 	}
 	
@@ -138,7 +169,7 @@ public class NewsData {
 		String selection = NewsDataContract.COLUMN_STATUS + " LIKE ?";
 	    String[] selectionArgs = new String[]{"selected"};
 		return db.query(NewsDataContract.TABLE_NAME, 
-				new String[]{"title as _id", "website", "program", "time"},
+				projectionBrief,
 				selection, selectionArgs, null, null, sortOrder);
 	}
 	
@@ -147,7 +178,7 @@ public class NewsData {
 		SQLiteDatabase db = mDbHelper.getReadableDatabase();
 		Cursor c;
 		c =  db.query(NewsDataContract.TABLE_NAME, 
-				new String[]{"entryid", "title", "time", "website", "program","content"},
+				projectionContent,
 				null, null, null, null, sortOrder);
 		int i = 0;
 		
@@ -167,7 +198,7 @@ public class NewsData {
 		String selection = NewsDataContract.COLUMN_STATUS + " LIKE ?";
 	    String[] selectionArgs = new String[]{"unread"};
 		c =  db.query(NewsDataContract.TABLE_NAME, 
-				new String[]{"entryid", "title", "time", "website", "program","content"},
+				projectionContent,
 				selection, selectionArgs, null, null, sortOrder);
 		int i = 0;
 		
@@ -187,7 +218,7 @@ public class NewsData {
 		String selection = NewsDataContract.COLUMN_STATUS + " LIKE ?";
 	    String[] selectionArgs = new String[]{"selected"};
 		c =  db.query(NewsDataContract.TABLE_NAME, 
-				new String[]{"entryid", "title", "time", "website", "program","content"},
+				projectionContent,
 				selection, selectionArgs, null, null, sortOrder);
 		int i = 0;
 		
@@ -203,60 +234,28 @@ public class NewsData {
 		
 	
 	// To find out the entry_id of a piece of news, which is the latest one stored in database from a given web site 
-	public String getLatestNewsID(String site) {
+	public String getLatestURL(String website, String program) {
 		    SQLiteDatabase db = mDbHelper.getReadableDatabase();
-		    String item_entryID;
+		    String item_url;
 		    String[] projection = {
 		    		NewsDataContract.COLUMN_ENTRY_ID
 		    };
-		    String selection = NewsDataContract.COLUMN_WEBSITE + " LIKE ?";
-		    String[] selectionArgs = new String[]{site};
+		    String selection = NewsDataContract.COLUMN_WEBSITE + "=" +"?" 
+		    		           + " AND " + NewsDataContract.COLUMN_PROGRAM  + "=?";
+		    String[] selectionArgs = new String[]{website, program};
 		    // DESC means sorting from bigger to smaller
 		    String sortOrder = NewsDataContract._ID + " DESC";
 		    
 		    // find out all the news from the web site, ordered by latest to oldest
-		    Cursor cursor = db.query(NewsDataContract.TABLE_NAME, projection, selection, selectionArgs, null, null, sortOrder);
+		    Cursor cursor = db.query(NewsDataContract.TABLE_NAME, projection, 
+		    		selection, 
+		    		selectionArgs, 
+		    		null, null, sortOrder);
 		    cursor.moveToFirst();
-		    item_entryID = cursor.getString(cursor.getColumnIndex(NewsDataContract.COLUMN_ENTRY_ID));
+		    item_url = cursor.getString(cursor.getColumnIndex(NewsDataContract.COLUMN_ENTRY_ID));
 		    cursor.close();
 		    db.close();
-		    return item_entryID;
-    }
-	
-	// To insert news which are not stored in the database from a given web site
-	public int fetchNewsUpdates(String site){
-		int count = 0;
-		String latest_ID = getLatestNewsID(site);
-		
-		// To figure out how many news (not stored) are there in the web site
-		Spider news = new Spider();
-		while(count <= MAX_INSERT_ROWS){
-			// to test function fetch, replace getnews to spidernews
-			news.spidernews();
-			
-			if(news.entryid.equals(latest_ID)){
-			    break;
-		    }
-			else {
-				count = count + 1;
-			}
-			
-		}
-		
-		// To store the value of count 
-		int number = count;
-		
-		
-		// To insert news into database according to count
-		Spider newsToInsert = new Spider();
-		while(count > 0){
-			newsToInsert.spidernews();
-		    insert(newsToInsert);
-		    count = count - 1;
-	    }
-	
-		// To return the number of newly inserted news 
-		return number;
+		    return item_url;
     }
 	
 	// three conditions to change status: unread to read, read to selected, selected to read
@@ -293,7 +292,7 @@ public class NewsData {
     
 	}
 	
-	// In order to save space, unselected news are abandoned when the number of all the news is more than 500
+	// In order to save space, unselected news are abandoned when the number of all the news is more than MAX_UNSELECTED_ROWS
 	public void deleteUnselectedNews(){
 		SQLiteDatabase db = mDbHelper.getReadableDatabase();
 		Cursor cursor;
