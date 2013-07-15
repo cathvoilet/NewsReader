@@ -1,7 +1,5 @@
 package com.ezra.test;
 
-import android.util.Log;
-
 import java.io.*;
 import java.net.URL;
 import java.net.URLConnection;
@@ -12,9 +10,9 @@ import java.util.regex.Pattern;
 import org.apache.http.util.*;
 
 public class Html {
-    public String url_yes;
+    private String url_yes;
 
-    public String Sources;
+    private String Sources;
 
     Html(String a){url_yes=a;}
 
@@ -49,22 +47,14 @@ public class Html {
             Matcher matchedTitle = news.matcher(title);
             //get all of them by while
             while (matchedTitle.find()){
-                //下面那个换成加入数据库。。
                 url.add(url_yes+matchedTitle.group(1));
-                //Log.v("testurl",url_yes+matchedTitle.group(1));
-                //Log.v("testtitle",matchedTitle.group(2));
             }
         }
-        //for (int j=0;j<url.size();j++){
-        //    Log.v("test!!!",url.get(j).toString());
-        //}
         return url;
     }
 
-    public void divideCol(ArrayList url){
-        for (int j=0;j<url.size();j++){
-            Log.v("test???",url.get(j).toString());
-        }
+    public String getCol(){
+        String Col=new String();
         //xueshengyuandi
         Pattern patterncol_student=Pattern.compile("(.*ColumnNo=NA05.*)");
         //jiaoxuejingwei
@@ -73,76 +63,54 @@ public class Html {
         Pattern patterncol_learning=Pattern.compile("(.*ColumnNo=NA03.*)");
         //xueyuandongtai
         Pattern patterncol_activity=Pattern.compile("(.*ColumnNo=NA01.*)");
-        ArrayList col_student=new ArrayList();
-        ArrayList col_teaching=new ArrayList();
-        ArrayList col_learning=new ArrayList();
-        ArrayList col_activity=new ArrayList();
-        for (int j=0;j<url.size();j++){
-            String theurl=url.get(j).toString();
-            Matcher matchactivity=patterncol_activity.matcher(theurl);
-            Matcher matchlearning=patterncol_learning.matcher(theurl);
-            Matcher matchstudent=patterncol_student.matcher(theurl);
-            Matcher matchteaching=patterncol_teaching.matcher(theurl);
-            if (matchactivity.find()){
-                col_activity.add(matchactivity.group(1));
-            }
-            if (matchlearning.find()){
-                col_learning.add(matchlearning.group(1));
-            }
-            if (matchstudent.find()){
-                col_student.add(matchstudent.group(1));
-            }
-            if (matchteaching.find()){
-                col_teaching.add(matchteaching.group(1));
-            }
+        Matcher matchactivity=patterncol_activity.matcher(url_yes);
+        Matcher matchlearning=patterncol_learning.matcher(url_yes);
+        Matcher matchstudent=patterncol_student.matcher(url_yes);
+        Matcher matchteaching=patterncol_teaching.matcher(url_yes);
+        if (matchactivity.find()){
+            Col="学院动态";
         }
-        /*
-        for (int j=0;j<col_activity.size();j++){
-            Log.v("testactivity",col_activity.get(j).toString());
+        if (matchlearning.find()){
+            Col="学术资讯";
         }
-        for (int j=0;j<col_student.size();j++){
-            Log.v("teststudent",col_student.get(j).toString());
+        if (matchstudent.find()){
+            Col="学生园地";
         }
-        for (int j=0;j<col_learning.size();j++){
-            Log.v("testlearning",col_learning.get(j).toString());
+        if (matchteaching.find()){
+            Col="教学经纬";
         }
-        for (int j=0;j<col_teaching.size();j++){
-            Log.v("testteaching",col_teaching.get(j).toString());
-        }*/
+        return Col;
     }
 
-    //get time and title
-    public void getInfo(){
-        String Title=new String();
-        String Time=new String();
+    public String getTime(){
+        String Time=new String("cant get it");
         //识别4个汉字。。。
-        Pattern news = Pattern.compile("<font size='2'>(.*?)</font>.*?[\\u4E00-\\u9FA5]{4}:</b>(.*?)&nbsp;&nbsp;<b>");
+        Pattern news = Pattern.compile("<font size='2'>.*?</font>.*?[\\u4E00-\\u9FA5]{4}:</b>(.*?)&nbsp;&nbsp;<b>");
         Matcher matchedNews = news.matcher(Sources);
-        Log.v("test!!!","!!!");
+        if (matchedNews.find()){
+            Time=matchedNews.group(1);
+        }
+        return Time;
+    }
+
+    public String getTitle(){
+        String Title=new String("cant get it");
+        Pattern news = Pattern.compile("<font size='2'>(.*?)</font>");
+        Matcher matchedNews = news.matcher(Sources);
         if (matchedNews.find()){
             Title=matchedNews.group(1);
-            Time=matchedNews.group(2);
-            Log.v("test!!!",Title);
-            Log.v("test!!!",Time);
         }
-        //TODO:
+        return Title;
     }
 
-    //get content with some bugs....- -
-    public void getContent(){
-        String Content=new String();
-        Pattern news = Pattern.compile("<table width=\"100%\"  align=\"center\">(.*?)</table>");
+    public String getContent(){
+        String Content=new String("cant get it");
+        Pattern news = Pattern.compile("(<table\\s*width=\"100%\"\\s*align=\"center\">[\\s\\S]*?</table>)");
         Matcher matchedNews = news.matcher(Sources);
-        Log.v("test!!!","!!!");
         if (matchedNews.find()){
             Content=matchedNews.group(1);
-            Log.v("test!!!",Content);
         }
-        //TODO:
+        return Content;
     }
 
-    //TODO:
-    public void getAllContent(){
-
-    }
 }
