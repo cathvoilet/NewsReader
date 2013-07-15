@@ -5,6 +5,7 @@ import android.util.Log;
 import java.io.*;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.ArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -37,10 +38,11 @@ public class Html {
     }
 
     //for home page
-    public void getAllUrl(){
+    public ArrayList getAllUrl(){
         Pattern new_col = Pattern.compile("<table width=\"100%\" cellpadding=\"3\">(.*?)</table>");
         Matcher matchedCol = new_col.matcher(Sources);
         String title=new String();
+        ArrayList url=new ArrayList();
         while (matchedCol.find()){
             title = matchedCol.group(1);
             Pattern news = Pattern.compile("<a.*?href=\"(.*?)\"\\s+target=\"_blank\"\\stitle=.*?>(.*?)</a>");
@@ -48,10 +50,65 @@ public class Html {
             //get all of them by while
             while (matchedTitle.find()){
                 //下面那个换成加入数据库。。
-                Log.v("testurl",url_yes+matchedTitle.group(1));
-                Log.v("testtitle",matchedTitle.group(2));
+                url.add(url_yes+matchedTitle.group(1));
+                //Log.v("testurl",url_yes+matchedTitle.group(1));
+                //Log.v("testtitle",matchedTitle.group(2));
             }
         }
+        //for (int j=0;j<url.size();j++){
+        //    Log.v("test!!!",url.get(j).toString());
+        //}
+        return url;
+    }
+
+    public void divideCol(ArrayList url){
+        for (int j=0;j<url.size();j++){
+            Log.v("test???",url.get(j).toString());
+        }
+        //xueshengyuandi
+        Pattern patterncol_student=Pattern.compile("(.*ColumnNo=NA05.*)");
+        //jiaoxuejingwei
+        Pattern patterncol_teaching=Pattern.compile("(.*ColumnNo=NA02.*)");
+        //xuesuzixun
+        Pattern patterncol_learning=Pattern.compile("(.*ColumnNo=NA03.*)");
+        //xueyuandongtai
+        Pattern patterncol_activity=Pattern.compile("(.*ColumnNo=NA01.*)");
+        ArrayList col_student=new ArrayList();
+        ArrayList col_teaching=new ArrayList();
+        ArrayList col_learning=new ArrayList();
+        ArrayList col_activity=new ArrayList();
+        for (int j=0;j<url.size();j++){
+            String theurl=url.get(j).toString();
+            Matcher matchactivity=patterncol_activity.matcher(theurl);
+            Matcher matchlearning=patterncol_learning.matcher(theurl);
+            Matcher matchstudent=patterncol_student.matcher(theurl);
+            Matcher matchteaching=patterncol_teaching.matcher(theurl);
+            if (matchactivity.find()){
+                col_activity.add(matchactivity.group(1));
+            }
+            if (matchlearning.find()){
+                col_learning.add(matchlearning.group(1));
+            }
+            if (matchstudent.find()){
+                col_student.add(matchstudent.group(1));
+            }
+            if (matchteaching.find()){
+                col_teaching.add(matchteaching.group(1));
+            }
+        }
+        /*
+        for (int j=0;j<col_activity.size();j++){
+            Log.v("testactivity",col_activity.get(j).toString());
+        }
+        for (int j=0;j<col_student.size();j++){
+            Log.v("teststudent",col_student.get(j).toString());
+        }
+        for (int j=0;j<col_learning.size();j++){
+            Log.v("testlearning",col_learning.get(j).toString());
+        }
+        for (int j=0;j<col_teaching.size();j++){
+            Log.v("testteaching",col_teaching.get(j).toString());
+        }*/
     }
 
     //get time and title
@@ -83,7 +140,9 @@ public class Html {
         }
         //TODO:
     }
-    
-    public void getAllContent(){}
 
+    //TODO:
+    public void getAllContent(){
+
+    }
 }
