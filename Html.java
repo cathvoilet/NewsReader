@@ -14,9 +14,9 @@ public class Html {
 
     private String Sources;
 
-    Html(String a){url_yes=a;}
+    Html(String a){url_yes=a;Sources=getHtmlString();}
 
-    public String getHtmlString() {
+    private String getHtmlString() {
         try {
             URL url = new URL(url_yes);
             URLConnection ucon = url.openConnection();
