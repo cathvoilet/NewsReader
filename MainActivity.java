@@ -1,10 +1,15 @@
 package com.example.newsreader;
 
 import android.annotation.SuppressLint;
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Intent;
 import android.database.Cursor;
+import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -23,11 +28,20 @@ public class MainActivity extends Activity {
 	public final static String EXTRA_MESSAGE5 = "com.example.Newsreader.MESSAGE5";
 	public final static String EXTRA_MESSAGE6 = "com.example.Newsreader.MESSAGE6";
 	
+	public final static String WEBSITE1 = "http://math.sysu.edu.cn";
+	
+	    private static String BASE="http://math.sysu.edu.cn";
+	    public static String TESTURL="http://math.sysu.edu.cn/main/news/CommonNews.aspx?ColumnNo=NA01&NewsNo=7a0e33c1-33ab-458b-af2b-a6a669a212b2";
+	    public static String TESTURL2="http://math.sysu.edu.cn/main/news/CommonNews.aspx?ColumnNo=NA01&NewsNo=e38c6ae5-7d35-4be3-9b6f-2a093632c1a8";
+
+    Handler handler = new Handler();
+	Runnable runnable;
+	       
 	Cursor cs;
 	ListView listNews;
 	NewsData news = new NewsData(this);
-	static final String[] FROM = {NewsDataContract._ID, NewsDataContract.COLUMN_WEBSITE, NewsDataContract.COLUMN_PROGRAM, NewsDataContract.COLUMN_TIME};
-    static final int[] TO = { R.id.textID, R.id.textWebsite, R.id.textProgram, R.id.textTime};
+	static final String[] FROM = {NewsDataContract._ID, NewsDataContract.COLUMN_TITLE, NewsDataContract.COLUMN_WEBSITE, NewsDataContract.COLUMN_PROGRAM, NewsDataContract.COLUMN_TIME};
+    static final int[] TO = { R.id.textID, R.id.textTITLE, R.id.textWebsite, R.id.textProgram, R.id.textTime};
     SimpleCursorAdapter adapter;
 	
 	@Override
@@ -37,36 +51,37 @@ public class MainActivity extends Activity {
 	    setContentView(R.layout.activity_main);
 	    
 	    listNews = (ListView) findViewById(R.id.listNews);
-	       
-	    news.fetchNewsUpdates("www.sysu.org.com");
 	    
-	 // To delete all data stored in the database
-	 //   news.deleteALLNews();
-	 //   Spider one = new Spider();
-	 //   news.insert(one);
-     //   news.close();
-        
+	    setupActionBar();
+	     
+	    //自动删除超过500条的未被收藏的新闻
+	    news.deleteUnselectedNews();
+	    //news.deleteALLNews();
+	   	   
+	    //********************************
+        //定时器定时执行更新
+        //********************************
+        runnable = new Runnable(){
+            @Override
+            public void run() {
+                new GetElements().execute(TESTURL);
+                handler.postDelayed(this, 10000);// 10000ms后执行this，即runable
+            }
+        };
+        handler.postDelayed(runnable, 10000);// 打开定时器，10000ms后执行runnable操作 
+	}
+	
+	@Override
+	protected void onDestroy(){
+	    super.onDestroy();
+	    handler.removeCallbacks(runnable);// 关闭定时器处理
 	}
 	
 	@SuppressLint("NewApi")
 	@Override
 	protected void onResume() {
 	    super.onResume();
-	    
-	    //test function change status
-	    //news.changeStatus("1234", "ReadToUnread");
-	    //news.changeStatus("12340", "ReadToUnread");
-	    //news.changeStatus("123400", "ReadToUnread");
-	    //news.changeStatus("1234000", "ReadToUnread");
-	    //news.changeStatus("12340000", "ReadToUnread");
-	    //news.changeStatus("123400000", "ReadToUnread");
-	    //news.changeStatus("1234000000", "ReadToUnread");
-	    //news.changeStatus("12340000000", "ReadToUnread");
-	    //news.changeStatus("123400000000", "ReadToUnread");
-	    //news.changeStatus("1234000000000", "ReadToUnread");
-	    //news.changeStatus("12340000000000", "ReadToUnread");
-	    //news.changeStatus("123400000000000", "ReadToUnread");
-	    
+
 	    cs = news.readUNREAD();
 	   
 	    adapter = new SimpleCursorAdapter(this, R.layout.row, cs, FROM, TO, 0);
@@ -83,10 +98,7 @@ public class MainActivity extends Activity {
 	        
 	    };
 
-	    listNews.setOnItemClickListener(mMessageClickedHandler); 
-       
-	    //news.deleteUnselectedNews();
-	    
+	    listNews.setOnItemClickListener(mMessageClickedHandler); 	    
 	}
 	
 	public void jump_to_content(int position, int condition){
@@ -112,10 +124,18 @@ public class MainActivity extends Activity {
     	String website = cs.getString(cs.getColumnIndex(NewsDataContract.COLUMN_WEBSITE));
     	String program = cs.getString(cs.getColumnIndex(NewsDataContract.COLUMN_PROGRAM));
     	String content = cs.getString(cs.getColumnIndex(NewsDataContract.COLUMN_CONTENT));
+    	String status = cs.getString(cs.getColumnIndex(NewsDataContract.COLUMN_STATUS));
     	
-    	news.changeStatus(entryid, "UnreadToRead");
-		
-		//String message = String.valueOf(position);
+    	if(condition == 1 ){
+    	    news.changeStatus(entryid, "UnreadToRead");
+    	}
+    	
+    	if(condition == 3 ){
+    		if(status.equals("unread")){
+    	      news.changeStatus(entryid, "UnreadToRead");
+    		}
+    	}
+    	
 		intent.putExtra(EXTRA_MESSAGE1,title);
 		intent.putExtra(EXTRA_MESSAGE2,time);
 		intent.putExtra(EXTRA_MESSAGE3,website);
@@ -133,10 +153,25 @@ public class MainActivity extends Activity {
         return true;
 	} 
     
+    /**
+	 * Set up the {@link android.app.ActionBar}, if the API is available.
+	 */
+	@TargetApi(Build.VERSION_CODES.HONEYCOMB)
+	private void setupActionBar() {
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
+			getActionBar().setDisplayHomeAsUpEnabled(true);
+		}
+	}
+    
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         // Handle item selection
         switch (item.getItemId()) {
+            case android.R.id.home:
+            	Intent intent = new Intent(this, SubscriptionActivity.class);
+                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                startActivity(intent);
+			    return true;
             case R.id.refresh:
             	refresh();
             	return true;
@@ -232,7 +267,43 @@ public class MainActivity extends Activity {
     } 
     
     public void refresh(){
-    	news.fetchNewsUpdates("www.sysu.org.com");
+    	 
     }
+    
+    private class GetElements extends AsyncTask<String, Integer, String> {
+
+        @SuppressWarnings("unused")
+		private Exception exception;
+
+        @Override
+        protected String doInBackground(String... urls) {
+            try {
+                //************************************
+                //以下可用于调用更新
+                //************************************
+                Log.v("test!!!","begin");
+               
+                news.fetchNewsUpdate(WEBSITE1);
+                return "";
+            } catch (Exception e) {
+                this.exception = e;
+                return null;
+            }
+        }
+
+        @Override
+        protected void onProgressUpdate(Integer... values) {
+            super.onProgressUpdate(values);
+            // Not used in this case
+        }
+
+        @Override
+        protected void onPostExecute(String myString) {
+            super.onPostExecute(myString);
+            // Not used in this case
+        }
+    }
+    
    
 }
+   
