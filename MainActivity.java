@@ -61,14 +61,13 @@ public class MainActivity extends Activity {
 	    //********************************
         //定时器定时执行更新
         //********************************
-        runnable = new Runnable(){
+	    runnable = new Runnable(){
             @Override
             public void run() {
-                new GetElements().execute(TESTURL);
-                handler.postDelayed(this, 10000);// 10000ms后执行this，即runable
+                new GetElements().execute();
+                handler.postDelayed(this, 3600000);// 1h后执行this，即runable
             }
         };
-        handler.postDelayed(runnable, 10000);// 打开定时器，10000ms后执行runnable操作 
 	}
 	
 	@Override
@@ -267,7 +266,7 @@ public class MainActivity extends Activity {
     } 
     
     public void refresh(){
-    	 
+    	 new GetElements().execute();
     }
     
     private class GetElements extends AsyncTask<String, Integer, String> {

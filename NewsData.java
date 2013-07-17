@@ -328,7 +328,7 @@ public class NewsData {
 	//调用即可抓取所有新闻
     @SuppressWarnings({ "rawtypes", "unchecked" })
 	public int fetchNewsUpdate(String URL){
-        Html homepage=new Html(URL);
+    	Html homepage=new Html(URL);
         int count=0;
         ArrayList allurl=homepage.getAllUrl();
         ArrayList col_student=new ArrayList();
@@ -337,7 +337,7 @@ public class NewsData {
         ArrayList col_activity=new ArrayList();
         for (int i=0;i<allurl.size();i++){
             String tempurl=allurl.get(i).toString();
-            Html temp=new Html(tempurl);
+            Html temp=new Html(tempurl,0);
             String Col=temp.getCol();
             if (Col=="学生园地"){
                 col_student.add(tempurl);
@@ -348,14 +348,15 @@ public class NewsData {
             if (Col=="学院动态"){
                 col_activity.add(tempurl);
             }
-            if (Col=="学术咨询"){
+            if (Col=="学术资讯"){
                 col_learning.add(tempurl);
             }
         }
         count+=updateProgram(col_student,"学生园地");
         count+=updateProgram(col_teaching,"教学经纬");
         count+=updateProgram(col_activity,"学院动态");
-        count+=updateProgram(col_learning,"学术咨询");
+        count+=updateProgram(col_learning,"学术资讯");
+        Log.v("test!!!", String.valueOf(count));
         return count;
     }
     

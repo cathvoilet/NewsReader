@@ -1,13 +1,18 @@
-package com.ezra.test;
+package com.example.newsreader;
 
-import java.io.*;
+
+import java.io.BufferedInputStream;
+import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.http.util.*;
+import org.apache.http.util.ByteArrayBuffer;
+import org.apache.http.util.EncodingUtils;
+
+import android.util.Log;
 
 public class Html {
     private String url_yes;
@@ -15,8 +20,9 @@ public class Html {
     private String Sources;
 
     Html(String a){url_yes=a;Sources=getHtmlString();}
+    Html(String a,int i){url_yes=a;}
 
-    private String getHtmlString() {
+    public String getHtmlString() {
         try {
             URL url = new URL(url_yes);
             URLConnection ucon = url.openConnection();
@@ -29,6 +35,7 @@ public class Html {
             }
             //对应网页编码
             Sources=EncodingUtils.getString(baf.toByteArray(), "GBK");
+            Log.v("test!!!","finishgettingsource");
             return EncodingUtils.getString(baf.toByteArray(), "GBK");
         } catch (Exception e) {
             return "";
@@ -36,20 +43,25 @@ public class Html {
     }
 
     //for home page
-    public ArrayList getAllUrl(){
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+	public ArrayList getAllUrl(){
         Pattern new_col = Pattern.compile("<table width=\"100%\" cellpadding=\"3\">(.*?)</table>");
         Matcher matchedCol = new_col.matcher(Sources);
         String title=new String();
         ArrayList url=new ArrayList();
+        int count=0;
         while (matchedCol.find()){
             title = matchedCol.group(1);
-            Pattern news = Pattern.compile("<a.*?href=\"(.*?)\"\\s+target=\"_blank\"\\stitle=.*?>(.*?)</a>");
+            Pattern news = Pattern.compile("<a.*?href=\"(.*?)\"");
             Matcher matchedTitle = news.matcher(title);
             //get all of them by while
             while (matchedTitle.find()){
                 url.add(url_yes+matchedTitle.group(1));
+                count++;
+                Log.v("test!!!", url_yes+matchedTitle.group(1));
             }
         }
+        Log.v("test!!!", String.valueOf(count));
         return url;
     }
 
@@ -105,12 +117,19 @@ public class Html {
 
     public String getContent(){
         String Content=new String("cant get it");
+        String finalContent=new String("cant get it");
         Pattern news = Pattern.compile("(<table\\s*width=\"100%\"\\s*align=\"center\">[\\s\\S]*?</table>)");
         Matcher matchedNews = news.matcher(Sources);
         if (matchedNews.find()){
             Content=matchedNews.group(1);
+            Pattern del=Pattern.compile("(<tr><td>[\\u4E00-\\u9FA5]{3}:.*?</td></tr>)");
+            Matcher delNews=del.matcher(Content);
+            if (delNews.find()){
+                finalContent=delNews.replaceAll("");
+            }
         }
-        return Content;
+        return finalContent;
     }
+
 
 }

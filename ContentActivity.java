@@ -1,13 +1,17 @@
 package com.example.newsreader;
 
+import java.net.URLEncoder;
+
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.NavUtils;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.webkit.WebView;
 import android.widget.TextView;
 
 public class ContentActivity extends Activity {
@@ -23,6 +27,7 @@ public class ContentActivity extends Activity {
 		
 		Intent intent = getIntent();
 		
+		/*
 		String textTitle = intent.getStringExtra(MainActivity.EXTRA_MESSAGE1);
         TextView Title = (TextView) findViewById(R.id.CTitle);
 		Title.append(textTitle);
@@ -38,10 +43,19 @@ public class ContentActivity extends Activity {
 		String textProgram = intent.getStringExtra(MainActivity.EXTRA_MESSAGE4);
         TextView Program = (TextView) findViewById(R.id.CProgram);
 		Program.append(textProgram);
+		*/
 		
 		String textContent = intent.getStringExtra(MainActivity.EXTRA_MESSAGE5);
-        TextView Content = (TextView) findViewById(R.id.CContent);
-		Content.append(textContent);
+		
+		//String textUrl = intent.getStringExtra(MainActivity.EXTRA_MESSAGE6);
+		
+		WebView myWebView = (WebView) findViewById(R.id.webview);
+		myWebView.loadDataWithBaseURL("www.baidu.com",textContent, "text/html","utf-8", null);
+		
+		
+
+        //TextView Content = (TextView) findViewById(R.id.CContent);
+		//Content.append(textContent);
 
 		// Show the Up button in the action bar.
 		setupActionBar();
@@ -67,6 +81,10 @@ public class ContentActivity extends Activity {
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch (item.getItemId()) {
+		    case R.id.action_settings:
+	            Intent preferencesIntent = new Intent(this, SettingsActivity.class);
+	            startActivity(preferencesIntent);
+            return true;
 		    case android.R.id.home:
 			// This ID represents the Home or Up button. In the case of this
 			// activity, the Up button is shown. Use NavUtils to allow users
@@ -77,6 +95,9 @@ public class ContentActivity extends Activity {
 			//
 			NavUtils.navigateUpFromSameTask(this);
 			return true;
+		    case R.id.browser:
+		    	openInBrowser();
+                return true;
 		    case R.id.save_news:
 		    	readToSelected();
                 return true;
@@ -87,6 +108,15 @@ public class ContentActivity extends Activity {
                 return super.onOptionsItemSelected(item);
 		}
 
+	}
+	
+	public void openInBrowser(){
+		Intent intent = getIntent();
+		String entryid = intent.getStringExtra(MainActivity.EXTRA_MESSAGE6);
+		Uri uri = Uri.parse(entryid);
+		Intent it = new Intent(Intent.ACTION_VIEW, uri);
+		startActivity(it);
+		
 	}
 	
 	public void readToSelected(){
