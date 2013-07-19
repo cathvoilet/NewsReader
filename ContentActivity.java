@@ -1,7 +1,6 @@
 package com.example.newsreader;
 
-import java.net.URLEncoder;
-
+import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Intent;
@@ -11,24 +10,29 @@ import android.os.Bundle;
 import android.support.v4.app.NavUtils;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
+import android.view.Window;
+import android.view.WindowManager;
 import android.webkit.WebView;
 import android.widget.TextView;
 
-public class ContentActivity extends Activity {
+public class ContentActivity extends Activity{
 	NewsData news = new NewsData(this);
 
+
+	@SuppressLint("NewApi")
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		//Bundle bundle = getIntent().getExtras();
 		//String name = bundle.getString("name");
-		
+
 		setContentView(R.layout.activity_content);
-		
+
 		Intent intent = getIntent();
 		
-		/*
-		String textTitle = intent.getStringExtra(MainActivity.EXTRA_MESSAGE1);
+		
+		/*String textTitle = intent.getStringExtra(MainActivity.EXTRA_MESSAGE1);
         TextView Title = (TextView) findViewById(R.id.CTitle);
 		Title.append(textTitle);
 		
@@ -42,23 +46,23 @@ public class ContentActivity extends Activity {
 		
 		String textProgram = intent.getStringExtra(MainActivity.EXTRA_MESSAGE4);
         TextView Program = (TextView) findViewById(R.id.CProgram);
-		Program.append(textProgram);
-		*/
+		Program.append(textProgram);*/
+		
 		
 		String textContent = intent.getStringExtra(MainActivity.EXTRA_MESSAGE5);
 		
-		//String textUrl = intent.getStringExtra(MainActivity.EXTRA_MESSAGE6);
+		//String textURL = intent.getStringExtra(MainActivity.EXTRA_MESSAGE6);
 		
-		WebView myWebView = (WebView) findViewById(R.id.webview);
+		WebView myWebView = (WebView) findViewById(R.id.CContent);
 		myWebView.loadDataWithBaseURL("www.baidu.com",textContent, "text/html","utf-8", null);
-		
-		
-
-        //TextView Content = (TextView) findViewById(R.id.CContent);
+     
+		//TextView Content = (TextView) findViewById(R.id.CContent);
 		//Content.append(textContent);
 
 		// Show the Up button in the action bar.
 		setupActionBar();
+		
+		
 	}
 
 	/**
@@ -78,6 +82,7 @@ public class ContentActivity extends Activity {
 		return true;
 	}
 
+	@SuppressLint("NewApi")
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch (item.getItemId()) {
@@ -109,6 +114,8 @@ public class ContentActivity extends Activity {
 		}
 
 	}
+	
+	
 	
 	public void openInBrowser(){
 		Intent intent = getIntent();

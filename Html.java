@@ -11,6 +11,9 @@ import java.util.regex.Pattern;
 
 import org.apache.http.util.ByteArrayBuffer;
 import org.apache.http.util.EncodingUtils;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.safety.Whitelist;
 
 import android.util.Log;
 
@@ -128,8 +131,26 @@ public class Html {
                 finalContent=delNews.replaceAll("");
             }
         }
-        return finalContent;
+                
+        Document doc = null;
+    	doc = Jsoup.parse(finalContent);
+    	
+        doc.select("tr").first().remove();
+        doc.select("tr").first().remove(); 
+        
+       return doc.html();
     }
 
-
+    //提取content
+    public String parseHtml(){
+    	String finalContent = getContent();
+    	
+    	String parsedContent = "failed";
+    	finalContent = "<html>"+ finalContent + "</html>";
+    	parsedContent = Jsoup.clean(finalContent, Whitelist.relaxed());
+    	Document doc = null;
+    	doc = Jsoup.parse(finalContent);
+    	return doc.text();
+    }
+    
 }

@@ -2,6 +2,11 @@ package com.example.newsreader;
 
 import java.util.ArrayList;
 
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
+
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
@@ -30,6 +35,7 @@ public class NewsData {
 	        public static final String COLUMN_WEBSITE = "website";
 	        public static final String COLUMN_PROGRAM = "program";
 	        public static final String COLUMN_CONTENT = "content";
+	        public static final String COLUMN_PARSED_CONTENT = "parsed_content";
 	        public static final String COLUMN_STATUS = "status";
 	}
 	
@@ -46,6 +52,7 @@ public class NewsData {
 		    NewsDataContract.COLUMN_WEBSITE + TEXT_TYPE + COMMA_SEP +
 		    NewsDataContract.COLUMN_PROGRAM + TEXT_TYPE + COMMA_SEP +
 		    NewsDataContract.COLUMN_CONTENT + TEXT_TYPE + COMMA_SEP +
+		    NewsDataContract.COLUMN_PARSED_CONTENT + TEXT_TYPE + COMMA_SEP +
 		    NewsDataContract.COLUMN_STATUS + TEXT_TYPE +
 		    " )";
 		private static final String SQL_DELETE_ENTRIES =
@@ -83,7 +90,7 @@ public class NewsData {
 	    this.mDbHelper.close();
 	  }
 	
-	public void insert(String URL, String title, String website, String program, String time, String content){
+	public void insert(String URL, String title, String website, String program, String time, String content, String parsed_content){
 		SQLiteDatabase db = mDbHelper.getWritableDatabase();
 
 		// Create a new map of values
@@ -95,6 +102,7 @@ public class NewsData {
 		values.put(NewsDataContract.COLUMN_TITLE, title);
 		values.put(NewsDataContract.COLUMN_TIME, time);
 		values.put(NewsDataContract.COLUMN_CONTENT, content);
+		values.put(NewsDataContract.COLUMN_PARSED_CONTENT, parsed_content);
 		values.put(NewsDataContract.COLUMN_STATUS, "unread");
 
 		// Insert the new row
@@ -115,7 +123,9 @@ public class NewsData {
 						NewsDataContract.COLUMN_TITLE,
 						NewsDataContract.COLUMN_WEBSITE,
 						NewsDataContract.COLUMN_PROGRAM,
-						NewsDataContract.COLUMN_TIME
+						NewsDataContract.COLUMN_TIME,
+						NewsDataContract.COLUMN_CONTENT,
+						NewsDataContract.COLUMN_PARSED_CONTENT
 					    };
 	
 	String[] projectionContent = {
@@ -125,6 +135,7 @@ public class NewsData {
 			NewsDataContract.COLUMN_WEBSITE,
 			NewsDataContract.COLUMN_PROGRAM,
 			NewsDataContract.COLUMN_CONTENT,
+			NewsDataContract.COLUMN_PARSED_CONTENT,
 			NewsDataContract.COLUMN_STATUS
 		    };
 	
@@ -133,9 +144,12 @@ public class NewsData {
 	
 	public Cursor readALL(){
 		SQLiteDatabase db = mDbHelper.getReadableDatabase();
-		return db.query(NewsDataContract.TABLE_NAME, 
+		Cursor cs;
+		cs = db.query(NewsDataContract.TABLE_NAME, 
 				projectionBrief,
 				null, null, null, null, sortOrder);
+		
+		return cs;
 	}
 	
 	
@@ -143,18 +157,24 @@ public class NewsData {
 		SQLiteDatabase db = mDbHelper.getReadableDatabase();
 		String selection = NewsDataContract.COLUMN_STATUS + " LIKE ?";
 	    String[] selectionArgs = new String[]{"unread"};
+	    
 		return db.query(NewsDataContract.TABLE_NAME, 
 				projectionBrief,
 				selection, selectionArgs, null, null, sortOrder);
+		
 	}
 	
 	public Cursor readSELECTED(){
 		SQLiteDatabase db = mDbHelper.getReadableDatabase();
 		String selection = NewsDataContract.COLUMN_STATUS + " LIKE ?";
 	    String[] selectionArgs = new String[]{"selected"};
-		return db.query(NewsDataContract.TABLE_NAME, 
+	    Cursor cs;
+		cs = db.query(NewsDataContract.TABLE_NAME, 
 				projectionBrief,
 				selection, selectionArgs, null, null, sortOrder);
+		
+		return cs;
+		
 	}
 	
 	
@@ -172,7 +192,7 @@ public class NewsData {
 		}
 		
 		c.moveToNext();
-		
+		db.close();
 		return c;
 	}
 		
@@ -192,7 +212,7 @@ public class NewsData {
 		}
 		
 		c.moveToNext();
-		
+		db.close();
 		return c;
 	}
 	
@@ -212,7 +232,7 @@ public class NewsData {
 		}
 		
 		c.moveToNext();
-		
+		db.close();
 		return c;
 	}
 		
@@ -283,6 +303,7 @@ public class NewsData {
 		    values,
 		    selection,
 		    selectionArgs);
+		db.close();
     
 	}
 	
@@ -317,12 +338,14 @@ public class NewsData {
 			}
 			
 		}
+		db.close();
 			
 	}
 	
 	public void deleteALLNews(){
 		SQLiteDatabase db = mDbHelper.getReadableDatabase();
 		db.delete(NewsDataContract.TABLE_NAME, null, null);
+		db.close();
 	}
 	
 	//调用即可抓取所有新闻
@@ -364,12 +387,25 @@ public class NewsData {
    	private int updateProgram(ArrayList Col,String program){
            int count=0;
            String tempLatestURL=getLatestURL("中山大学数计院",program);
+           String title, website, col, time, content, parsedHtml;
+           
            //empty
            if (tempLatestURL=="-1"){
                for (int i=Col.size()-1;i>=0;i--){
                    String tempurl=Col.get(i).toString();
                    Html temp=new Html(tempurl);
-                   insert(tempurl, temp.getTitle(), "中山大学数计院", temp.getCol(), temp.getTime(), temp.getContent());
+                   
+                   title = temp.getTitle();
+                   website = "中山大学数计院";
+                   col = temp.getCol();
+                   time = temp.getTime();
+                   content = "<div><tr><td><b><font size='5'>" + title + "</font></b></td></tr></div>"
+                		   + "<div><tr><td><font size='4'>" + time + "</font></td></tr></div>"
+                		   + "<div>来自 "+ "<tr><td><font size='3'>" + website + ">" + program + "</font></td></tr></div>"
+                		   + temp.getContent();
+                   parsedHtml = temp.parseHtml();
+                   
+                   insert(tempurl, title, website, col, time, content, parsedHtml);
                    count++;
                }
            }
@@ -387,11 +423,24 @@ public class NewsData {
                for (;i>=0;i--){
                    String tempurl=Col.get(i).toString();
                    Html temp=new Html(tempurl);
-                   insert(tempurl, temp.getTitle(), "中山大学数计院", temp.getCol(), temp.getTime(), temp.getContent());
+                   
+                   title = temp.getTitle();
+                   website = "中山大学数计院";
+                   col = temp.getCol();
+                   time = temp.getTime();
+                   content = "<div><tr><td><b><font size='5'>" + title + "</font></b></td></tr></div>"
+                		   + "<div><tr><td><font size='4'>" + time + "</font></td></tr></div>"
+                		   + "<div>来自 "+ "<tr><td><font size='3'>" + website + ">" + program + "</font></td></tr></div>"
+                		   + temp.getContent();
+                   parsedHtml = temp.parseHtml();
+                   
+                   insert(tempurl, title, website, col, time, content, parsedHtml);
+                   
                    count++;
                }
            }
            return count;
        }
-	
+    
+
 }
