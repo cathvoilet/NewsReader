@@ -1,5 +1,9 @@
 package com.example.newsreader;
 
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.safety.Whitelist;
+
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.Activity;
@@ -36,12 +40,14 @@ public class MainActivity extends Activity {
 
     Handler handler = new Handler();
 	Runnable runnable;
+	ListView listNews;
 	       
 	Cursor cs;
-	ListView listNews;
+	
 	NewsData news = new NewsData(this);
-	static final String[] FROM = {NewsDataContract._ID, NewsDataContract.COLUMN_TITLE, NewsDataContract.COLUMN_WEBSITE, NewsDataContract.COLUMN_PROGRAM, NewsDataContract.COLUMN_TIME};
-    static final int[] TO = { R.id.textID, R.id.textTITLE, R.id.textWebsite, R.id.textProgram, R.id.textTime};
+	static final String[] FROM = {NewsDataContract._ID, NewsDataContract.COLUMN_TITLE, NewsDataContract.COLUMN_PARSED_CONTENT
+		};
+    static final int[] TO = { R.id.textID, R.id.textTITLE, R.id.textContent};
     SimpleCursorAdapter adapter;
 	
 	@Override
@@ -53,10 +59,10 @@ public class MainActivity extends Activity {
 	    listNews = (ListView) findViewById(R.id.listNews);
 	    
 	    setupActionBar();
-	     
+	    
 	    //自动删除超过500条的未被收藏的新闻
 	    news.deleteUnselectedNews();
-	    //news.deleteALLNews();
+	   // news.deleteALLNews();
 	   	   
 	    //********************************
         //定时器定时执行更新
